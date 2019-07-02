@@ -24,12 +24,14 @@ You can see an example of how to fetch the data in [the TickTock tests](/Tests/T
 
 ```swift
 import SwiftUI
-import Combine
+import Combine // or `import OpenCombine` on non-Apple platforms
 import TickTock
 
+extension Schedule: BindableObject {}
+
 struct ContentView : View {
-    let park = Park()
-    @ObjectBinding var user = Resource(endpoint: park.schedule(for: "disneylandIDNumber"))
+    let park = Park(park: .disneyland)
+    @ObjectBinding var schedule = park.schedule
 
     var body: some View {
         Group {
@@ -37,14 +39,13 @@ struct ContentView : View {
                 Text("Loading...")
             } else {
                 VStack {
-                    Text(user.value!.startTime).bold()
-                    Text(user.value!.endTime)
+                    Text(schedule.data!.startTime)
+                    Text(schedule.data!.endTime)
                 }
             }
         }
     }
 }
-
 ```
 
 ## Attribution

@@ -37,7 +37,7 @@ final class TickTockTests: XCTestCase {
 //                Text("Loading...")
 //            } else {
 //                VStack {
-//                    Text(schedule.data!.startTime).bold()
+//                    Text(schedule.data!.startTime)
 //                    Text(schedule.data!.endTime)
 //                }
 //            }

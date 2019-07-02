@@ -8,10 +8,10 @@
 
 import Foundation
 import TinyNetworking
-#if !os(iOS) && !os(macOS) && !os(tvOS) && !os(watchOS)
-import OpenCombine
-#elseif
+#if canImport(Combine)
 import Combine
+#elseif
+import OpenCombine
 #endif
 
 class Schedule {
