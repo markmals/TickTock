@@ -1,36 +1,26 @@
 //
 //  Park.swift
-//  
+//  TickTock
 //
-//  Created by Mark Malstrom on 7/1/19.
+//  Created by Mark Malstrom on 7/2/19.
+//  Copyright © 2019 Mark Malstrom. All rights reserved.
 //
 
 import Foundation
 import TinyNetworking
-// import Burritos
+#if !os(iOS) && !os(macOS) && !os(tvOS) && !os(watchOS)
+import OpenCombine
+#elseif
+import Combine
+#endif
 
-public class Park {
-    private var token = Authentication()
+class Park {
+    static let authentication = Authentication()
     
-    // Fetch a brand new access token on the creation of a Park instance
-    init() {
-        token.accessToken { (result) in
-            self.token = (try? result.get())?.1 ?? Authentication()
-        }
-    }
-
-    static func authentication() -> Endpoint<Authentication> {
-        Endpoint(
-            json: .post,
-            url: URL(string: "https://authorization.go.com/token")!,
-            accept: .json,
-            body: "grant_type=assertion&assertion_type=public&client_id=WDPRO-MOBILE.MDX.WDW.ANDROID-PROD"
-                .data(using: .utf8)
-        )
-    }
-    
-    private func endpoint<T: Decodable>(url: URL, accessToken: String) -> Endpoint<T> {
-        Endpoint<T>(
+    static func endpoint<T: Decodable>(url: URL, accessToken: String) -> Endpoint<T>? {
+        guard !accessToken.isEmpty else { return nil }
+        
+        return Endpoint<T>(
             json: .get,
             url: url,
             headers: [
@@ -43,43 +33,41 @@ public class Park {
         )
     }
     
-    private func fetch<T: Decodable>(for url: URL, onComplete: @escaping (Result<Endpoint<T>, Error>) -> ()) {
-        token.accessToken { (result) in
-            switch result {
-            case .success(let tuple):
-                let access = tuple.0
-                
-                onComplete(
-                    .success(
-                        self.endpoint(
-                            url: url,
-                            accessToken: access
-                        )
-                    )
-                )
-        
-                if let newToken = tuple.1 {
-                    self.token = newToken
-                }
-            case .failure(let error):
-                onComplete(.failure(error))
-            }
-        }
+    public let park: Bespoke
+    public let schedule: Schedule
+    
+    public init(park: Bespoke) {
+        self.park = park
+        self.schedule = Schedule(for: park.id)
     }
     
-    func schedule(for id: String, onComplete: @escaping (Result<Endpoint<Schedule>, Error>) -> ()) {
-        let url = URL(string: "https://api.wdpro.disney.go.com/global-pool-override-A/facility-service/schedules/\(id)")!
-        
-        fetch(for: url) { (result) in
-            onComplete(result)
-        }
-    }
+    func applyFilter() {}
+}
 
-    func waitTimes(for id: String, onComplete: @escaping (Result<Endpoint<[Attraction]>, Error>) -> ()) {
-        let url = URL(string: "https://api.wdpro.disney.go.com/global-pool-override-A/facility-service/theme-parks/\(id)/wait-times")!
-        
-        fetch(for: url) { (result) in
-            onComplete(result)
-        }
+extension Park {
+    struct Bespoke {
+        public let id: String
+        public let name: String
+        public let shortName: String
+        public let location: Location
+        public let timeZone: TimeZone
     }
+}
+
+extension Park.Bespoke {
+    static let disneyland = Park.Bespoke(
+        id: "330339",
+        name: "Disneyland",
+        shortName: "Disneyland",
+        location: Location(latitude: 33.810109, longitude: -117.918971),
+        timeZone: TimeZone(abbreviation: "PST")!
+    )
+    
+    static let californiaAdventure = Park.Bespoke(
+        id: "336894",
+        name: "California Adventure",
+        shortName: "DCA",
+        location: Location(latitude: 33.808720, longitude: -117.918990),
+        timeZone: TimeZone(abbreviation: "PST")!
+    )
 }

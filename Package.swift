@@ -3,7 +3,7 @@
 
 import PackageDescription
 
-let package = Package(
+var package = Package(
     name: "TickTock",
     platforms: [.macOS(.v10_12), .iOS(.v11), .tvOS(.v11), .watchOS(.v4)],
     products: [
@@ -12,8 +12,7 @@ let package = Package(
             targets: ["TickTock"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/objcio/tiny-networking", .branch("master")),
-        // .package(url: "https://github.com/guillermomuntaner/Burritos", from: "0.0.2")
+        .package(url: "https://github.com/objcio/tiny-networking", .branch("master"))
     ],
     targets: [
         .target(
@@ -24,3 +23,8 @@ let package = Package(
             dependencies: ["TickTock"]),
     ]
 )
+
+// #if !os(iOS) && !os(macOS) && !os(tvOS) && !os(watchOS)
+package.dependencies.append(.package(url: "https://github.com/broadwaylamb/OpenCombine", .branch("master")))
+package.targets.first?.dependencies.append("OpenCombine")
+// #endif
