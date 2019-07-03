@@ -10,7 +10,7 @@ import Foundation
 import TinyNetworking
 #if canImport(Combine)
 import Combine
-#elseif
+#else
 import OpenCombine
 #endif
 
