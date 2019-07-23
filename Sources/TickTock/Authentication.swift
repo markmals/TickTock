@@ -1,24 +1,21 @@
 //
 //  Authentication.swift
-//  TickTock
+//  TickTockCrock
 //
-//  Created by Mark Malstrom on 7/2/19.
+//  Created by Mark Malstrom on 7/22/19.
 //  Copyright © 2019 Mark Malstrom. All rights reserved.
 //
 
 import Foundation
-import TinyNetworking
 #if canImport(Combine)
 import Combine
 #else
 import OpenCombine
 #endif
+import TinyNetworking
 
-class Authentication {
-    private(set) var didChange: AnyPublisher<Token?, Never> = Publishers.Empty().eraseToAnyPublisher()
-    let subject = PassthroughSubject<Token?, Never>()
-    
-    let endpoint = Endpoint<Token>(
+struct Authentication {
+    static let endpoint = Endpoint<Token>(
         json: .post,
         url: URL(string: "https://authorization.go.com/token")!,
         accept: .json,
@@ -26,30 +23,10 @@ class Authentication {
         .data(using: .utf8)
     )
     
-    var firstSubscriber: Bool = true
-    
-    var token: Token? {
-        didSet {
-            DispatchQueue.main.async {
-                self.subject.send(self.token)
-            }
-        }
-    }
-    
-    init() {
-        didChange = subject.handleEvents(receiveSubscription: { [weak self] sub in
-            guard let this = self, this.firstSubscriber else { return }
-            this.firstSubscriber = false
-            this.reload()
-        }).eraseToAnyPublisher()
-    }
-    
-    func reload() {
-        if let token = token, token.valid { return }
-        URLSession.shared.load(endpoint) { result in
-            self.token = try? result.get()
-        }
-    }
+    static private(set) var publisher = URLSession.shared
+        .endpointPublisher(Authentication.endpoint)
+        .receive(on: DispatchQueue.main)
+        .eraseToAnyPublisher()
 }
 
 extension Authentication {
@@ -79,6 +56,11 @@ extension Authentication {
         
         /// If this token is still a valid token or if it needs to be refreshed
         var valid: Bool { refreshTime <= Date() }
+        
+        init() {
+            accessToken = ""
+            expires_in = nil
+        }
         
         private enum CodingKeys: String, CodingKey {
             case accessToken = "access_token"
