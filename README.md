@@ -20,27 +20,55 @@ Or, if you want to use this framework in an Apple-platform app, you can go to `F
 
 ## Usage
 
-You can see an example of how to fetch the data in [the TickTock tests](/Tests/TickTockTests/TickTockTests.swift):
+Make sure to import your modules first:
 
 ```swift
 import SwiftUI
 import Combine // or `import OpenCombine` on non-Apple platforms
 import TickTock
+```
 
-extension Schedule: BindableObject {}
+You can see an example of how to fetch the data in [the TickTock tests](/Tests/TickTockTests/TickTockTests.swift). With a few simple extensions to make Combine Publishers play nicely with SwiftUI:
 
-struct ContentView : View {
-    let park = Park(park: .disneyland)
-    @ObjectBinding var schedule = park.schedule
+```swift
+class BindableObjectPublisher<PublisherType: Publisher>: BindableObject where PublisherType.Failure == Never {
+    typealias Data = PublisherType.Output
+
+    var willChange: PublisherType
+    var data: Data?
+
+    init(willChange: PublisherType) {
+        self.willChange = willChange
+        _ = self.willChange.sink { (value) in
+            self.data = value
+        }
+    }
+}
+
+extension Publisher where Failure == Never {
+    func bindableObject() -> BindableObjectPublisher<Self> {
+        return BindableObjectPublisher(willChange: self)
+    }
+}
+```
+
+Then we can begin to use `Park`'s Publishers in a SwiftUI app:
+
+```swift
+struct ContentView: View {
+    @ObjectBinding var schedules = Park(for: .disneyland).schedulesPublisher
+        // Still not sure how to gracefully handle failure and display an `Alert()`
+        .assertNoFailure()
+        .bindableObject()
 
     var body: some View {
         Group {
-            if user.value == nil {
+            if schedules.data == nil {
                 Text("Loading...")
             } else {
                 VStack {
-                    Text(schedule.data!.startTime)
-                    Text(schedule.data!.endTime)
+                    Text("The park opens at: \(schedules.data!.startTime)")
+                    Text("The park closes at: \(schedules.data!.endTime)")
                 }
             }
         }
