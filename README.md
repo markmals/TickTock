@@ -28,7 +28,7 @@ import Combine // or `import OpenCombine` on non-Apple platforms
 import TickTock
 ```
 
-You can see an example of how to fetch the data in [the TickTock tests](/Tests/TickTockTests/TickTockTests.swift). With a few simple extensions to make Combine Publishers play nicely with SwiftUI:
+You can see an example of how to fetch the data in [the TickTock tests](/Tests/TickTockTests/TickTockTests.swift). With [a simple class and extension](https://stackoverflow.com/a/56720433) to make Combine Publishers play nicely with SwiftUI:
 
 ```swift
 class BindableObjectPublisher<PublisherType: Publisher>: BindableObject where PublisherType.Failure == Never {
