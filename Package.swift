@@ -11,20 +11,15 @@ var package = Package(
             name: "TickTock",
             targets: ["TickTock"]),
     ],
-    dependencies: [
-        .package(url: "https://github.com/markmals/tiny-networking", .branch("master"))
-    ],
     targets: [
-        .target(
-            name: "TickTock",
-            dependencies: ["TinyNetworking"]),
+        .target(name: "TickTock"),
         .testTarget(
             name: "TickTockTests",
             dependencies: ["TickTock"]),
     ]
 )
 
-#if !os(iOS) && !os(macOS) && !os(tvOS) && !os(watchOS)
-package.dependencies.append(.package(url: "https://github.com/broadwaylamb/OpenCombine", .branch("master")))
-package.targets.first?.dependencies.append("OpenCombine")
-#endif
+//#if !os(iOS) && !os(macOS) && !os(tvOS) && !os(watchOS)
+//package.dependencies.append(.package(url: "https://github.com/broadwaylamb/OpenCombine", .branch("master")))
+//package.targets.first?.dependencies.append("OpenCombine")
+//#endif

@@ -3,24 +3,18 @@ import Combine
 @testable import TickTock
 
 final class TickTockTests: XCTestCase {
-    var cancellable: Cancellable? = nil
-    
     func testExample() {
         // Every time the schedule changes, this should update
-        cancellable = Park(for: .disneyland).schedulesPublisher
-            // FIXME: Seriously... How does Combine error handling work...?
-            .assertNoFailure()
-            .sink {
-                print("Opens at: \($0.startTime)")
-                print("Closes at: \($0.endTime)")
-                print("Schedule type: \($0.type?.rawValue ?? "Unknown")")
-            }
+//        cancellable = Park(for: .disneyland).schedulesPublisher
+//            // FIXME: Seriously... How does Combine error handling work...?
+//            .assertNoFailure()
+//            .sink {
+//                print("Opens at: \($0.startTime)")
+//                print("Closes at: \($0.endTime)")
+//                print("Schedule type: \($0.type?.rawValue ?? "Unknown")")
+//            }
     }
     
-    override func tearDown() {
-        cancellable?.cancel()
-    }
-        
     static var allTests = [
         ("testExample", testExample),
     ]
@@ -31,41 +25,30 @@ final class TickTockTests: XCTestCase {
 //import SwiftUI
 //import Combine
 //
-//class BindableObjectPublisher<PublisherType: Publisher>: BindableObject where PublisherType.Failure == Never {
-//    typealias Data = PublisherType.Output
-//
-//    var willChange: PublisherType
-//    var data: Data?
-//
-//    init(willChange: PublisherType) {
-//        self.willChange = willChange
-//        _ = self.willChange.sink { (value) in
-//            self.data = value
-//        }
-//    }
-//}
-//
-//extension Publisher where Failure == Never {
-//    func bindableObject() -> BindableObjectPublisher<Self> {
-//        return BindableObjectPublisher(willChange: self)
-//    }
-//}
-//
-//
-//struct ContentView: View {
-//    @ObjectBinding var schedules = Park(for: .disneyland).schedulesPublisher
-//        .assertNoFailure()
-//        .bindableObject()
+//struct TestView: View {
+//    @ObservedObject var park = ParkResource(park: .disneyland)
 //
 //    var body: some View {
-//        Text("The park opens at: \(schedules.data?.startTime ?? "0:00")")
+//        ZStack {
+//            if (park.schedule != nil) && (park.attractions != nil) {
+//                Text("Park opens at: \(park.schedule!.startTime)")
+//                Text("Park closes at: \(park.schedule!.endTime)")
+//                ForEach(park.attractions!) { attraction in
+//                    Text("\(attraction.description)")
+//                }
+//            } else if park.error != nil {
+//                Text("Error: \(park.error!.localizedDescription)")
+//            }
+//        }
+//        .onAppear(perform: park.load)
+//        .onDisappear(perform: park.cancel)
 //    }
 //}
 //
 //#if DEBUG
 //struct ContentView_Previews: PreviewProvider {
 //    static var previews: some View {
-//        ContentView()
+//        TestView()
 //    }
 //}
 //#endif

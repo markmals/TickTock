@@ -7,49 +7,56 @@
 //
 
 import Foundation
-#if canImport(Combine)
-import Combine
-#else
-import OpenCombine
-#endif
-import TinyNetworking
 
-extension Park {
-    public struct Attraction: Decodable {
-        /// The operating status of an attraction
-        public enum Status: String, Decodable {
-            case operating = "Operating"
-            case closed = "Closed"
-            case down = "Down"
-            case seasonal = "Operates Seasonally"
-            case openingSoon = "Opening Soon"
-        }
-        
-        /// The type of an attraction
-        public enum AttractionType: String, Decodable {
-            case attraction = "Attraction"
-            case entertainment = "Entertainment"
-        }
-        
-        /// The name of the attraction
-        public let name: String
-        /// The type of the attraction
-        public let type: AttractionType?
-        /// True if the attraction has fast passes
-        public let fastPassIsAvaliable: Bool
-        /// True if the attraction has a single rider queue
-        public let singleRiderIsAvaliable: Bool
-        /// The operating status of the attraction
-        public let status: Status?
-        /// The posted wait time in minutes
-        public let minutes: String?
-        /// The roll up wait time message
-        public let message: String?
+public struct Attraction: Decodable {
+    static func request(for id: String, with token: Token) -> URLRequest {
+        URLRequest(
+            url: URL(string: "https://api.wdpro.disney.go.com/global-pool-override-A/facility-service/theme-parks/\(id)/wait-times"),
+            method: .post,
+            accept: .json,
+            headerFields: [
+                "Authorization" : "BEARER \(token.accessToken)",
+                "X-Conversation-Id" : "WDPRO-MOBILE.MDX.CLIENT-PROD",
+                "X-App-Id" : "WDW-MDX-ANDROID-3.4.1",
+                "X-Correlation-ID" : "\(Date().timeIntervalSince1970)"
+            ],
+            body: "grant_type=assertion&assertion_type=public&client_id=WDPRO-MOBILE.MDX.WDW.ANDROID-PROD"
+        )
     }
+    
+    /// The operating status of an attraction
+    public enum Status: String, Decodable {
+        case operating = "Operating"
+        case closed = "Closed"
+        case down = "Down"
+        case seasonal = "Operates Seasonally"
+        case openingSoon = "Opening Soon"
+    }
+    
+    /// The type of an attraction
+    public enum AttractionType: String, Decodable {
+        case attraction = "Attraction"
+        case entertainment = "Entertainment"
+    }
+    
+    /// The name of the attraction
+    public let name: String
+    /// The type of the attraction
+    public let type: AttractionType?
+    /// True if the attraction has fast passes
+    public let fastPassIsAvaliable: Bool
+    /// True if the attraction has a single rider queue
+    public let singleRiderIsAvaliable: Bool
+    /// The operating status of the attraction
+    public let status: Status?
+    /// The posted wait time in minutes
+    public let minutes: String?
+    /// The roll up wait time message
+    public let message: String?
 }
 
-extension Park.Attraction {
-    init(from attraction: Park.Attraction, newName: String) {
+extension Attraction {
+    init(from attraction: Attraction, newName: String) {
         self.name = newName
         self.type = attraction.type
         self.fastPassIsAvaliable = attraction.fastPassIsAvaliable
@@ -60,7 +67,7 @@ extension Park.Attraction {
     }
 }
 
-extension Park.Attraction {
+extension Attraction {
     private enum CodingKeys: String, CodingKey {
         case name
         case type
@@ -106,7 +113,14 @@ extension Park.Attraction {
     }
 }
 
-extension Park.Attraction: CustomStringConvertible {
+extension Attraction: Identifiable {
+    /// The identifier for Identifiable, identical to `name`
+    public var id: String {
+        return name
+    }
+}
+
+extension Attraction: CustomStringConvertible {
     public var description: String {
         return """
         Name: \(name)
@@ -120,7 +134,7 @@ extension Park.Attraction: CustomStringConvertible {
     }
 }
 
-extension Sequence where Iterator.Element == Park.Attraction {
+extension Sequence where Iterator.Element == Attraction {
     public var isStillOperating: Bool {
         var count = 0
         for attraction in self {

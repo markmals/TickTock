@@ -7,40 +7,47 @@
 //
 
 import Foundation
-#if canImport(Combine)
-import Combine
-#else
-import OpenCombine
-#endif
-import TinyNetworking
 
-extension Park {
-    public struct Schedule {
-        public enum ScheduleType: String, Codable {
-            case extraMagicMorning = "Extra Magic Hour and Magic Morning"
-            case extraMagicHours = "Extra Magic Hours"
-            case operating = "Operating"
-            case specialEvent = "Special Ticketed Event"
-            // FIXME: What to do with this???
-            case closed = "Closed"
-        }
-        
-        enum Error: Swift.Error {
-            case unableToGetParkOpeningTime
-        }
-        
-        /// The date when the schedule is active
-        public let date: Date
-        /// The start time
-        public let startTime: String
-        /// The end time
-        public let endTime: String
-        /// The type/name
-        public let type: Schedule.ScheduleType?
+public struct Schedule {
+    static func request(for id: String, with token: Token) -> URLRequest {
+        URLRequest(
+            url: URL(string: "https://api.wdpro.disney.go.com/global-pool-override-A/facility-service/schedules/\(id)"),
+            method: .post,
+            accept: .json,
+            headerFields: [
+                "Authorization" : "BEARER \(token.accessToken)",
+                "X-Conversation-Id" : "WDPRO-MOBILE.MDX.CLIENT-PROD",
+                "X-App-Id" : "WDW-MDX-ANDROID-3.4.1",
+                "X-Correlation-ID" : "\(Date().timeIntervalSince1970)"
+            ],
+            body: "grant_type=assertion&assertion_type=public&client_id=WDPRO-MOBILE.MDX.WDW.ANDROID-PROD"
+        )
     }
+    
+    public enum ScheduleType: String, Codable {
+        case extraMagicMorning = "Extra Magic Hour and Magic Morning"
+        case extraMagicHours = "Extra Magic Hours"
+        case operating = "Operating"
+        case specialEvent = "Special Ticketed Event"
+        // FIXME: What to do with this???
+        case closed = "Closed"
+    }
+    
+    enum Error: Swift.Error {
+        case unableToGetParkOpeningTime
+    }
+    
+    /// The date when the schedule is active
+    public let date: Date
+    /// The start time
+    public let startTime: String
+    /// The end time
+    public let endTime: String
+    /// The type/name
+    public let type: Schedule.ScheduleType?
 }
 
-extension Park.Schedule: Decodable {
+extension Schedule: Decodable {
     private enum CodingKeys: String, CodingKey {
         case date
         case startTime
@@ -61,11 +68,11 @@ extension Park.Schedule: Decodable {
         self.date = dateFormatter.date(from: dateString)!
         self.startTime = try container.decode(String.self, forKey: .startTime)
         self.endTime = try container.decode(String.self, forKey: .endTime)
-        self.type = try container.decode(Park.Schedule.ScheduleType.self, forKey: .type)
+        self.type = try container.decode(Schedule.ScheduleType.self, forKey: .type)
     }
 }
 
-extension Park.Schedule: CustomStringConvertible {
+extension Schedule: CustomStringConvertible {
     public var description: String {
         var starts = "Starts on"
         var ends = "Ends on"
@@ -92,7 +99,7 @@ extension Park.Schedule: CustomStringConvertible {
 }
 
 
-extension Sequence where Iterator.Element == Park.Schedule {
+extension Sequence where Iterator.Element == Schedule {
     /// The first `.operating` startTime in the array
     public var parkOpeningTime: String? {
         for schedule in self {
