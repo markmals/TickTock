@@ -15,10 +15,9 @@ public final class ParkResource: ObservableObject {
     private var cancellable: AnyCancellable? = nil
     
     // FIXME: Work on token storage and caching
-    // @Published private var token: Token? = nil
-    @Published public private(set) var schedule: Schedule? = nil
-    @Published public private(set) var attractions: [Attraction]? = nil
-    @Published public private(set) var error: Error? = nil
+    // @Published private var token: Result<Token, Error>? = nil
+    @Published public private(set) var schedule: Result<Schedule, Error>? = nil
+    @Published public private(set) var attractions: Result<[Attraction], Error>? = nil
     
     public init(park: Park) {
         self.park = park
@@ -51,27 +50,58 @@ public final class ParkResource: ObservableObject {
         ParkResource.publisher(for: Token.request, type: Token.self)
     }
     
-    func combinedPublishers() -> AnyPublisher<([Attraction], Schedule), Error> {
-        ParkResource.tokenPublisher()
+    public func loadAttractions() {
+        cancellable = ParkResource.tokenPublisher()
+            .flatMap {
+                self.attractionsPublisher(with: $0)
+            }
+            .sink(
+                receiveCompletion: { [weak self] completion in
+                    if case let .failure(error) = completion {
+                        self?.attractions = .failure(error)
+                    }
+                },
+                receiveValue: { [weak self] attractions in
+                    self?.attractions = .success(attractions)
+                }
+            )
+    }
+    
+    public func loadSchedule() {
+        cancellable = ParkResource.tokenPublisher()
+            .flatMap {
+                self.schedulesPublisher(with: $0)
+            }
+            .sink(
+                receiveCompletion: { [weak self] completion in
+                    if case let .failure(error) = completion {
+                        self?.schedule = .failure(error)
+                    }
+                },
+                receiveValue: { [weak self] schedule in
+                    self?.schedule = .success(schedule)
+                }
+            )
+    }
+    
+    public func load() {
+        cancellable = ParkResource.tokenPublisher()
             .flatMap {
                 Publishers.CombineLatest(
                     self.attractionsPublisher(with: $0),
                     self.schedulesPublisher(with: $0)
                 )
-            }.eraseToAnyPublisher()
-    }
-    
-    public func load() {
-        cancellable = combinedPublishers()
+            }
             .sink(
                 receiveCompletion: { [weak self] completion in
                     if case let .failure(error) = completion {
-                        self?.error = error
+                        self?.schedule = .failure(error)
+                        self?.attractions = .failure(error)
                     }
                 },
                 receiveValue: { [weak self] (attractions, schedule) in
-                    self?.attractions = attractions
-                    self?.schedule = schedule
+                    self?.attractions = .success(attractions)
+                    self?.schedule = .success(schedule)
                 }
             )
     }
