@@ -1,0 +1,25 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "CombineExpectations",
+        "repositoryURL": "https://github.com/groue/CombineExpectations",
+        "state": {
+          "branch": null,
+          "revision": "96d5604151c94b21fbca6877b237e80af9e821dd",
+          "version": "0.5.0"
+        }
+      },
+      {
+        "package": "Resty",
+        "repositoryURL": "https://github.com/markmals/Resty",
+        "state": {
+          "branch": null,
+          "revision": "38d8199a0bf1e336869ee29ae30614b5a14e9efb",
+          "version": "0.2.8"
+        }
+      }
+    ]
+  },
+  "version": 1
+}

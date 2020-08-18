@@ -1,5 +1,4 @@
-// swift-tools-version:5.1
-// The swift-tools-version declares the minimum version of Swift required to build this package.
+// swift-tools-version:5.2
 
 import PackageDescription
 
@@ -7,19 +6,14 @@ var package = Package(
     name: "TickTock",
     platforms: [.macOS(.v10_15), .iOS(.v13), .tvOS(.v13), .watchOS(.v6)],
     products: [
-        .library(
-            name: "TickTock",
-            targets: ["TickTock"]),
+        .library(name: "TickTock", targets: ["TickTock"])
+    ],
+    dependencies: [
+        .package(url: "https://github.com/markmals/Resty", from: "0.2.8"),
+        .package(url: "https://github.com/groue/CombineExpectations", from: "0.5.0")
     ],
     targets: [
-        .target(name: "TickTock"),
-        .testTarget(
-            name: "TickTockTests",
-            dependencies: ["TickTock"]),
+        .target(name: "TickTock", dependencies: ["Resty"]),
+        .testTarget(name: "TickTockTests", dependencies: ["TickTock", "CombineExpectations"]),
     ]
 )
-
-//#if !os(iOS) && !os(macOS) && !os(tvOS) && !os(watchOS)
-//package.dependencies.append(.package(url: "https://github.com/broadwaylamb/OpenCombine", .branch("master")))
-//package.targets.first?.dependencies.append("OpenCombine")
-//#endif
